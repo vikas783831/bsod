@@ -3,51 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fake BSOD</title>
+    <title>Windows Defender Security Alert</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            font-family: 'Lucida Console', Monaco, monospace;
-            background-color: #0078d7;
-            color: white;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            cursor: default;
+            box-sizing: border-box;
             user-select: none;
         }
         
-        .bsod-container {
-            padding: 20px;
-            margin: 20px;
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f2f2f2;
+            color: #333;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
-        .emoji {
+        #normalContent {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        #defenderScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0078d7;
+            color: white;
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        
+        .defender-header {
+            background-color: #005a9e;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .defender-icon {
             font-size: 24px;
             margin-right: 10px;
         }
         
-        .title {
-            font-size: 24px;
+        .defender-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .defender-content {
+            padding: 30px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .critical-alert {
+            font-size: 28px;
             font-weight: bold;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
         }
         
-        .message {
-            font-size: 16px;
+        .warning-icon {
+            font-size: 40px;
+            margin-right: 15px;
+            color: #ff5555;
+        }
+        
+        .alert-message {
+            font-size: 18px;
             line-height: 1.5;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
         
-        .progress {
+        .threat-details {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .threat-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .threat-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: auto;
+        }
+        
+        .defender-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .primary-button {
+            background-color: #ff5555;
+            color: white;
+        }
+        
+        .primary-button:hover {
+            background-color: #ff3333;
+        }
+        
+        .secondary-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .secondary-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .scan-progress {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .progress-container {
             width: 100%;
             background-color: rgba(255, 255, 255, 0.2);
             height: 20px;
-            margin: 20px 0;
-            border-radius: 3px;
+            border-radius: 10px;
             overflow: hidden;
+            margin: 15px 0;
         }
         
         .progress-bar {
@@ -57,28 +156,42 @@
             transition: width 0.1s linear;
         }
         
-        .qr-code {
-            display: flex;
-            align-items: center;
-            margin-top: 30px;
-        }
-        
-        .qr-placeholder {
-            width: 100px;
-            height: 100px;
-            background-color: rgba(255, 255, 255, 0.2);
-            margin-right: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
+        .progress-text {
             text-align: center;
+            font-size: 14px;
         }
         
-        .info {
-            font-size: 14px;
-            margin-top: 40px;
-            opacity: 0.8;
+        .bsod-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0078d7;
+            color: white;
+            font-family: 'Lucida Console', Monaco, monospace;
+            padding: 20px;
+            display: none;
+            z-index: 2000;
+        }
+        
+        .bsod-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .bsod-emoji {
+            font-size: 28px;
+            margin-right: 10px;
+        }
+        
+        .bsod-message {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
         }
         
         .error-code {
@@ -87,117 +200,244 @@
             padding: 5px 10px;
             border-radius: 3px;
             display: inline-block;
-            margin-top: 10px;
+            margin: 10px 0;
         }
         
-        .hidden {
-            display: none;
+        .bsod-progress {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            height: 20px;
+            margin: 20px 0;
+            border-radius: 3px;
+            overflow: hidden;
         }
         
-        #bsodButton {
+        .bsod-progress-bar {
+            height: 100%;
+            background-color: white;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .bsod-percentage {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .bsod-info {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 30px;
+        }
+        
+        #closeButton {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background-color: #ff5555;
-            color: white;
+            top: 15px;
+            right: 15px;
+            background: none;
             border: none;
-            border-radius: 5px;
+            color: white;
+            font-size: 20px;
             cursor: pointer;
-            font-family: Arial, sans-serif;
-            z-index: 1000;
-        }
-        
-        #bsodButton:hover {
-            background-color: #ff3333;
+            z-index: 3000;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="bsodScreen" class="hidden">
-        <div class="bsod-container">
-            <div class="title">
-                <span class="emoji">:(</span>
-                Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.
+    <div id="normalContent">
+        <h1>College Project Demonstration</h1>
+        <p>This page simulates a Windows Defender security alert that leads to a BSOD.</p>
+        <p>The simulation will start automatically in <span id="countdown">5</span> seconds...</p>
+    </div>
+
+    <!-- Windows Defender Alert Screen -->
+    <div id="defenderScreen">
+        <div class="defender-header">
+            <div class="defender-icon">🛡️</div>
+            <div class="defender-title">Windows Defender</div>
+        </div>
+        
+        <div class="defender-content">
+            <div class="critical-alert">
+                <div class="warning-icon">⚠️</div>
+                <div>CRITICAL SYSTEM ALERT</div>
             </div>
             
-            <div class="progress">
-                <div id="progressBar" class="progress-bar"></div>
+            <div class="alert-message">
+                Windows Defender detected severe system corruption that could lead to data loss or system instability. 
+                Immediate action is required to prevent permanent damage to your system.
             </div>
             
-            <div class="message">
-                If you'd like to know more, you can search online later for this error: <span class="error-code">CRITICAL_PROCESS_DIED</span>
-            </div>
-            
-            <div class="qr-code">
-                <div class="qr-placeholder">
-                    [QR code placeholder]
+            <div class="threat-details">
+                <div class="threat-row">
+                    <div class="threat-label">Threat Name:</div>
+                    <div>Trojan:Win32/Wacatac.B!ml</div>
                 </div>
-                <div>
-                    For more information about this issue and possible fixes, visit https://www.windows.com/stopcode
-                    <br><br>
-                    Support person: Tell them this stop code: CRITICAL_PROCESS_DIED
+                <div class="threat-row">
+                    <div class="threat-label">Severity:</div>
+                    <div>Critical</div>
+                </div>
+                <div class="threat-row">
+                    <div class="threat-label">Location:</div>
+                    <div>C:\Windows\System32\drivers\atapi.sys</div>
+                </div>
+                <div class="threat-row">
+                    <div class="threat-label">Status:</div>
+                    <div>Active (spreading to other system files)</div>
                 </div>
             </div>
             
-            <div class="info">
-                <div id="percentage">0% complete</div>
-                <div>
-                    The dump file was created but cannot be found. This could be caused by a problem with your storage device.
-                    <br>
-                    To try to repair your PC, insert your Windows installation media and restart your PC.
+            <div class="action-buttons">
+                <button id="removeThreat" class="defender-button primary-button">Remove Threat (Recommended)</button>
+                <button id="advancedOptions" class="defender-button secondary-button">Advanced Options</button>
+            </div>
+            
+            <div id="scanProgress" class="scan-progress">
+                <div>Scanning and repairing system files...</div>
+                <div class="progress-container">
+                    <div id="defenderProgressBar" class="progress-bar"></div>
                 </div>
+                <div id="defenderProgressText" class="progress-text">0% complete</div>
             </div>
         </div>
     </div>
     
-    <div id="normalContent">
-        <h1>Your Normal Web Content Here</h1>
-        <p>This is where your regular website content would appear.</p>
-        <p>Click the button in the bottom right to trigger the fake BSOD.</p>
+    <!-- BSOD Screen -->
+    <div id="bsodScreen" class="bsod-screen">
+        <div class="bsod-title">
+            <span class="bsod-emoji">:(</span>
+            Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.
+        </div>
+        
+        <div class="bsod-message">
+            If you'd like to know more, you can search online later for this error: 
+            <span class="error-code">CRITICAL_PROCESS_DIED</span>
+        </div>
+        
+        <div class="bsod-percentage" id="bsodPercentage">0% complete</div>
+        <div class="bsod-progress">
+            <div id="bsodProgressBar" class="bsod-progress-bar"></div>
+        </div>
+        
+        <div class="bsod-info">
+            <div>
+                For more information about this issue and possible fixes, visit https://www.windows.com/stopcode
+                <br><br>
+                Support person: Tell them this stop code: CRITICAL_PROCESS_DIED
+            </div>
+            <div style="margin-top: 20px;">
+                The dump file was created but cannot be found. This could be caused by a problem with your storage device.
+                <br>
+                To try to repair your PC, insert your Windows installation media and restart your PC.
+            </div>
+        </div>
     </div>
     
-    <button id="bsodButton">Trigger BSOD</button>
+    <!-- Close button that actually triggers fullscreen BSOD -->
+    <button id="closeButton">✕</button>
     
     <script>
-        document.getElementById('bsodButton').addEventListener('click', function() {
+        // Prevent any key from closing the simulation
+        document.addEventListener('keydown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }, true);
+        
+        // Prevent right click
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        }, false);
+        
+        // Auto-start countdown
+        let count = 5;
+        const countdownElement = document.getElementById('countdown');
+        const countdownInterval = setInterval(() => {
+            count--;
+            countdownElement.textContent = count;
+            
+            if (count <= 0) {
+                clearInterval(countdownInterval);
+                startSimulation();
+            }
+        }, 1000);
+        
+        function startSimulation() {
             // Hide normal content
-            document.getElementById('normalContent').classList.add('hidden');
+            document.getElementById('normalContent').style.display = 'none';
+            
+            // Show Defender alert
+            document.getElementById('defenderScreen').style.display = 'flex';
+            
+            // Show close button (which will actually trigger BSOD)
+            document.getElementById('closeButton').style.display = 'block';
+        }
+        
+        // Close button triggers BSOD
+        document.getElementById('closeButton').addEventListener('click', function() {
+            // Hide Defender screen
+            document.getElementById('defenderScreen').style.display = 'none';
             
             // Show BSOD
-            document.getElementById('bsodScreen').classList.remove('hidden');
+            document.getElementById('bsodScreen').style.display = 'block';
             
-            // Simulate progress
+            // Make the page fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log("Fullscreen error:", err);
+                });
+            }
+            
+            // Simulate BSOD progress
             let progress = 0;
-            const progressBar = document.getElementById('progressBar');
-            const percentageText = document.getElementById('percentage');
+            const bsodProgressBar = document.getElementById('bsodProgressBar');
+            const bsodPercentage = document.getElementById('bsodPercentage');
+            
+            const interval = setInterval(function() {
+                progress += Math.random() * 3;
+                if (progress > 100) progress = 100;
+                
+                bsodProgressBar.style.width = progress + '%';
+                bsodPercentage.textContent = Math.floor(progress) + '% complete';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    // Keep it at 100% - no automatic exit
+                }
+            }, 100);
+        });
+        
+        // Defender "Remove Threat" button
+        document.getElementById('removeThreat').addEventListener('click', function() {
+            // Show scanning progress
+            document.getElementById('scanProgress').style.display = 'block';
+            
+            // Simulate scanning progress
+            let progress = 0;
+            const defenderProgressBar = document.getElementById('defenderProgressBar');
+            const defenderProgressText = document.getElementById('defenderProgressText');
             
             const interval = setInterval(function() {
                 progress += Math.random() * 5;
                 if (progress > 100) progress = 100;
                 
-                progressBar.style.width = progress + '%';
-                percentageText.textContent = Math.floor(progress) + '% complete';
+                defenderProgressBar.style.width = progress + '%';
+                defenderProgressText.textContent = Math.floor(progress) + '% complete';
                 
                 if (progress >= 100) {
                     clearInterval(interval);
-                    setTimeout(function() {
-                        // "Restart" by reloading the page
-                        document.getElementById('bsodScreen').classList.add('hidden');
-                        document.getElementById('normalContent').classList.remove('hidden');
-                        progressBar.style.width = '0%';
-                        percentageText.textContent = '0% complete';
-                    }, 1000);
+                    // After scan "completes", trigger BSOD
+                    document.getElementById('closeButton').click();
                 }
             }, 100);
         });
         
-        // Optional: Make the BSOD fullscreen when F11 is pressed
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F11') {
-                e.preventDefault();
-                document.getElementById('bsodButton').click();
-            }
+        // Defender "Advanced Options" button
+        document.getElementById('advancedOptions').addEventListener('click', function() {
+            // Immediately trigger BSOD
+            document.getElementById('closeButton').click();
         });
     </script>
 </body>
