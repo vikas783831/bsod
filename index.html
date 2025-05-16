@@ -339,15 +339,14 @@
         </div>
     </div>
     
-    <!-- Fullscreen overlay to block browser UI -->
-    <div id="overlay"></div>
-    
     <script>
         // Block all keyboard input
         document.addEventListener('keydown', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
+            if (e.key === 'F12' || e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
         }, true);
         
         // Block right click
@@ -387,9 +386,6 @@
             
             // Show Defender alert
             document.getElementById('defenderScreen').style.display = 'flex';
-            
-            // Activate overlay to block browser UI
-            document.getElementById('overlay').style.display = 'block';
             
             // Request fullscreen
             if (document.documentElement.requestFullscreen) {
@@ -446,9 +442,6 @@
             
             // Show BSOD
             document.getElementById('bsodScreen').style.display = 'block';
-            
-            // Ensure overlay stays on top
-            document.getElementById('overlay').style.zIndex = '9999';
             
             // Simulate BSOD progress
             let progress = 0;
