@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake BSOD</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Lucida Console', Monaco, monospace;
+            background-color: #0078d7;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            cursor: default;
+            user-select: none;
+        }
+        
+        .bsod-container {
+            padding: 20px;
+            margin: 20px;
+        }
+        
+        .emoji {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .progress {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            height: 20px;
+            margin: 20px 0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: white;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .qr-code {
+            display: flex;
+            align-items: center;
+            margin-top: 30px;
+        }
+        
+        .qr-placeholder {
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .info {
+            font-size: 14px;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+        
+        .error-code {
+            font-family: monospace;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 5px 10px;
+            border-radius: 3px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #bsodButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #ff5555;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            z-index: 1000;
+        }
+        
+        #bsodButton:hover {
+            background-color: #ff3333;
+        }
+    </style>
+</head>
+<body>
+    <div id="bsodScreen" class="hidden">
+        <div class="bsod-container">
+            <div class="title">
+                <span class="emoji">:(</span>
+                Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.
+            </div>
+            
+            <div class="progress">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+            
+            <div class="message">
+                If you'd like to know more, you can search online later for this error: <span class="error-code">CRITICAL_PROCESS_DIED</span>
+            </div>
+            
+            <div class="qr-code">
+                <div class="qr-placeholder">
+                    [QR code placeholder]
+                </div>
+                <div>
+                    For more information about this issue and possible fixes, visit https://www.windows.com/stopcode
+                    <br><br>
+                    Support person: Tell them this stop code: CRITICAL_PROCESS_DIED
+                </div>
+            </div>
+            
+            <div class="info">
+                <div id="percentage">0% complete</div>
+                <div>
+                    The dump file was created but cannot be found. This could be caused by a problem with your storage device.
+                    <br>
+                    To try to repair your PC, insert your Windows installation media and restart your PC.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="normalContent">
+        <h1>Your Normal Web Content Here</h1>
+        <p>This is where your regular website content would appear.</p>
+        <p>Click the button in the bottom right to trigger the fake BSOD.</p>
+    </div>
+    
+    <button id="bsodButton">Trigger BSOD</button>
+    
+    <script>
+        document.getElementById('bsodButton').addEventListener('click', function() {
+            // Hide normal content
+            document.getElementById('normalContent').classList.add('hidden');
+            
+            // Show BSOD
+            document.getElementById('bsodScreen').classList.remove('hidden');
+            
+            // Simulate progress
+            let progress = 0;
+            const progressBar = document.getElementById('progressBar');
+            const percentageText = document.getElementById('percentage');
+            
+            const interval = setInterval(function() {
+                progress += Math.random() * 5;
+                if (progress > 100) progress = 100;
+                
+                progressBar.style.width = progress + '%';
+                percentageText.textContent = Math.floor(progress) + '% complete';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(function() {
+                        // "Restart" by reloading the page
+                        document.getElementById('bsodScreen').classList.add('hidden');
+                        document.getElementById('normalContent').classList.remove('hidden');
+                        progressBar.style.width = '0%';
+                        percentageText.textContent = '0% complete';
+                    }, 1000);
+                }
+            }, 100);
+        });
+        
+        // Optional: Make the BSOD fullscreen when F11 is pressed
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                document.getElementById('bsodButton').click();
+            }
+        });
+    </script>
+</body>
+</html>
